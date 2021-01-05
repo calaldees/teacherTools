@@ -3,11 +3,72 @@
     <meta charset="utf-8" />
     <link id="favicon" rel="shortcut icon" type="image/png" href="data:image/png;base64,....==" />
     <title>feedbackLogger</title>
+<style>
+
+body {
+    background-color: linen;
+    margin: 0em;
+    overflow: hidden;
+    height: 100vh;
+}
+
+h1 {
+    display: none;
+}
+
+table {
+    /*
+    position: absolute;
+    top:0;
+    bottom:0;
+    left:0;
+    right:0;
+    */
+    width: 100%;
+    height: 100%;
+    border-spacing: 0px;
+    /*border: 1px solid black;*/
+}
+table td {
+    margin: 0;
+    padding: 0;
+    border: 1px solid black;
+}
+td.seat {
+    background-color: blueviolet;
+}
+
+</style>
 </head>
 <body>
 <h1>feedbackLogger</h1>
-
+<p id="text">Spoken text will go here</p>
 <script type="module">
+
+const elementOutput = document.getElementById("text");
+
+const data = { //JSON.parse(`{
+    "001": {
+        "name": "Ben",
+        "seat": 1,
+        "comments": []
+    },
+    "002": {
+        "name": "Jane",
+        "seat": 8,
+        "comments": []
+    },
+    "003": {
+        "name": "Sally",
+        "seat": 15,
+        "comments": []
+    },
+    "004": {
+        "name": "Brian",
+        "seat": 0,
+        "comments": []
+    }
+}//`);
 
 class SpeechManager {
     constructor() {
@@ -19,35 +80,86 @@ class SpeechManager {
         const r = new SpeechRecognition();
         r.continuous = true;
         r.interimResults = true;
-        r.addEventListener("result", this.onResult);
+        r.addEventListener("result", this.onResult.bind(this));
         this.r = r;
     }
     onResult(event) {
-        console.log(event);
+        let text = "";
+        for (const res of event.results) {
+            text += res[0].transcript;
+            if (res.isFinal) {
+                this.dataDestination.push(text);
+                console.log(text);
+            }
+        }
+        elementOutput.textContent = text;
     }
-    start() {
-        //this.r.start();
+    start(dataDestination) {
+        console.assert(dataDestination, "need dataDestination");
+        this.dataDestination = dataDestination;
+        this.r.start();
     }
+    stop() {
+        this.r.stop();
+        //this.dataDestination = undefined;
+    }
+
 }
 
 const s = new SpeechManager();
-s.start();
 
 // https://stackoverflow.com/a/18197341/3356840
 function download(filename, text) {
     const e = document.createElement('a');
-    e.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    e.setAttribute('href', 'data:application/json;charset=utf-8,' + encodeURIComponent(text));  // text/plain
     e.setAttribute('download', filename);
     e.style.display = 'none';
     document.body.appendChild(e);
     e.click();
     document.body.removeChild(e);
 }
-//const button = document.createElement('button');
-//button.onclick = () => download("test.txt", JSON.stringify({hello: "world"}));
-//document.body.appendChild(button);
+const button = document.createElement('button');
+button.textContent = "Download";
+button.addEventListener("click", () => download("feedbackLogger.json", JSON.stringify(data)));
+document.body.appendChild(button);
+
+const roomLayout = `
+100001
+101101
+101101
+101101
+101100
+100000
+`.split("\n").filter((i)=>i);
+
+// https://stackoverflow.com/a/14644462/3356840
+function tableCreate(roomLayout) {
+    const [width, height] = [roomLayout[0].length, roomLayout.length];
+    const tbl = document.createElement('table');
+    let seatCounter = 0;
+    for (let i = 0; i < height; i++) {
+        const tr = tbl.insertRow();
+        for (let j = 0; j < width; j++) {
+            const td = tr.insertCell();
+            if (roomLayout[i][j] == "1") {
+                td.id = `seat_${seatCounter++}`;
+                td.classList.add("seat");
+            }
+            td.appendChild(document.createTextNode(''));
+        }
+    }
+    return tbl;
+}
+document.body.appendChild(tableCreate(roomLayout));
+
+for (let student of Object.values(data)) {
+    //console.log(student.name);
+    const td = document.getElementById(`seat_${student.seat}`);
+    td.textContent = student.name;
+    td.addEventListener('mousedown', (e) => s.start(student.comments) );
+    td.addEventListener('mouseup', (e) => s.stop());
+}
 
 </script>
-
 </body>
 </html>
