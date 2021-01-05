@@ -1,0 +1,53 @@
+<!DOCTYPE html><html>
+<head>
+    <meta charset="utf-8" />
+    <link id="favicon" rel="shortcut icon" type="image/png" href="data:image/png;base64,....==" />
+    <title>feedbackLogger</title>
+</head>
+<body>
+<h1>feedbackLogger</h1>
+
+<script type="module">
+
+class SpeechManager {
+    constructor() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+        if (!SpeechRecognition) {
+            console.error("Your browser doesn't support Speech Recognition. Sorry.");
+            return;
+        }
+        const r = new SpeechRecognition();
+        r.continuous = true;
+        r.interimResults = true;
+        r.addEventListener("result", this.onResult);
+        this.r = r;
+    }
+    onResult(event) {
+        console.log(event);
+    }
+    start() {
+        //this.r.start();
+    }
+}
+
+const s = new SpeechManager();
+s.start();
+
+// https://stackoverflow.com/a/18197341/3356840
+function download(filename, text) {
+    const e = document.createElement('a');
+    e.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+    e.setAttribute('download', filename);
+    e.style.display = 'none';
+    document.body.appendChild(e);
+    e.click();
+    document.body.removeChild(e);
+}
+//const button = document.createElement('button');
+//button.onclick = () => download("test.txt", JSON.stringify({hello: "world"}));
+//document.body.appendChild(button);
+
+</script>
+
+</body>
+</html>
