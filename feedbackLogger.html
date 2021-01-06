@@ -134,6 +134,8 @@ class SpeechManager {
         r.continuous = true;
         r.interimResults = true;
         r.addEventListener("result", this.onResult.bind(this));
+        r.addEventListener("audiostart", ()=>text.textContent="speak ...");
+        r.addEventListener("audioend", ()=>text.textContent="_");
         this.r = r;
     }
     onResult(event) {
@@ -151,6 +153,7 @@ class SpeechManager {
         console.assert(dataDestination, "need dataDestination");
         this.dataDestination = dataDestination;
         this.r.start();
+        text.textContent = "starting ..."
     }
     stop() {
         this.r.stop();
@@ -226,6 +229,7 @@ for (let student of Object.values(data)) {
     td.addEventListener('mousedown', start);
     td.addEventListener('mouseup', stop);
     td.addEventListener('mouseleave', stop);
+    // TODO really should do something with 'audiostart' event
 }
 
 </script>
