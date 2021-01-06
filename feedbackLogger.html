@@ -1,48 +1,95 @@
 <!DOCTYPE html><html>
 <head>
+    <!-- inspired by https://www.twilio.com/blog/speech-recognition-browser-web-speech-api -->
     <meta charset="utf-8" />
     <link id="favicon" rel="shortcut icon" type="image/png" href="data:image/png;base64,....==" />
     <title>feedbackLogger</title>
 <style>
+html {
+    height:100%;
+    font-family: sans-serif;
+    caret-color: transparent !important;
+}
 
 body {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    align-content: stretch;
+
     background-color: linen;
     margin: 0em;
     overflow: hidden;
-    height: 100vh;
+
+    min-height:100%;
+    /* Thit height shit needs to be replaced with flexbox .. it's the only way :(
+        I have to learn this shit every time ...
+        */
+/*    height: 100vh;*/
 }
 
 h1 {
     display: none;
 }
 
-table {
-    /*
+#header {
+    flex-grow: 0;
+}
+
+#download {
     position: absolute;
+    right:0;
+    top:0;
+}
+
+#main {
+    flex-grow: 1;
+    align-self: stretch;
+    position: relative; /* I cant belive I need to resort to this old relative/absolue hack! */
+}
+
+table {
+    table-layout: fixed;
+    border-spacing: 0px;
+
+    width: 100%;
+    height: 100%;
+    position: absolute; /* I cant belive I need to resort to this absolute position hack shit */
     top:0;
     bottom:0;
     left:0;
     right:0;
-    */
-    width: 100%;
-    height: 100%;
-    border-spacing: 0px;
-    /*border: 1px solid black;*/
+    
 }
 table td {
     margin: 0;
     padding: 0;
     border: 1px solid black;
+    text-align: center;
 }
-td.seat {
-    background-color: blueviolet;
+table td.seat {
+    background-color: blanchedalmond;
+}
+table td.occupied {
+    background-color: burlywood;
+}
+table td.active {
+    background-color: sienna;
 }
 
 </style>
 </head>
 <body>
-<h1>feedbackLogger</h1>
-<p id="text">Spoken text will go here</p>
+    <h1>feedbackLogger</h1>
+    <div id="header">
+        <p id="text">Spoken text will go here</p>
+        <button id="download">Download</button>
+    </div>
+    <div id="main">
+    </div>
+
+
 <script type="module">
 
 const elementOutput = document.getElementById("text");
@@ -70,14 +117,20 @@ const data = { //JSON.parse(`{
     }
 }//`);
 
+
+
 class SpeechManager {
     constructor() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+        let r = {start: ()=> null, stop: ()=>null, addEventListener: ()=>null};
         if (!SpeechRecognition) {
-            console.error("Your browser doesn't support Speech Recognition. Sorry.");
-            return;
+            const msg = "Your browser doesn't support Speech Recognition. Sorry.";
+            elementOutput.textContent = msg;
+            console.error(msg);
+            //throw msg;
+        } else {
+            r = new SpeechRecognition();
         }
-        const r = new SpeechRecognition();
         r.continuous = true;
         r.interimResults = true;
         r.addEventListener("result", this.onResult.bind(this));
@@ -108,6 +161,7 @@ class SpeechManager {
 
 const s = new SpeechManager();
 
+
 // https://stackoverflow.com/a/18197341/3356840
 function download(filename, text) {
     const e = document.createElement('a');
@@ -118,10 +172,12 @@ function download(filename, text) {
     e.click();
     document.body.removeChild(e);
 }
-const button = document.createElement('button');
-button.textContent = "Download";
-button.addEventListener("click", () => download("feedbackLogger.json", JSON.stringify(data)));
-document.body.appendChild(button);
+document
+    .getElementById('download')
+    .addEventListener(
+        "click", 
+        () => download("feedbackLogger.json", JSON.stringify(data))
+    );
 
 const roomLayout = `
 100001
@@ -133,9 +189,9 @@ const roomLayout = `
 `.split("\n").filter((i)=>i);
 
 // https://stackoverflow.com/a/14644462/3356840
-function tableCreate(roomLayout) {
-    const [width, height] = [roomLayout[0].length, roomLayout.length];
+function layoutTableContent(roomLayout) {
     const tbl = document.createElement('table');
+    const [width, height] = [roomLayout[0].length, roomLayout.length];
     let seatCounter = 0;
     for (let i = 0; i < height; i++) {
         const tr = tbl.insertRow();
@@ -150,14 +206,26 @@ function tableCreate(roomLayout) {
     }
     return tbl;
 }
-document.body.appendChild(tableCreate(roomLayout));
+const tbl = layoutTableContent(roomLayout);
+document.getElementById('main').appendChild(tbl);
 
 for (let student of Object.values(data)) {
     //console.log(student.name);
     const td = document.getElementById(`seat_${student.seat}`);
+    td.classList.add("occupied");
+
     td.textContent = student.name;
-    td.addEventListener('mousedown', (e) => s.start(student.comments) );
-    td.addEventListener('mouseup', (e) => s.stop());
+    function start(e) {
+        e.target.classList.add("active");
+        s.start(student.comments);
+    }
+    function stop(e) {
+        e.target.classList.remove("active");
+        s.stop();
+    }
+    td.addEventListener('mousedown', start);
+    td.addEventListener('mouseup', stop);
+    td.addEventListener('mouseleave', stop);
 }
 
 </script>
