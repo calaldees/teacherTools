@@ -230,7 +230,9 @@ for (let student of Object.values(data)) {
         e.target.classList.remove("active");
         s.stop();
     }
+    td.addEventListener('touchstart', start);
     td.addEventListener('mousedown', start);
+    td.addEventListener('touchend', stop);
     td.addEventListener('mouseup', stop);
     td.addEventListener('mouseleave', stop);
     // TODO really should do something with 'audiostart' event
