@@ -90,7 +90,8 @@ table td.active {
 <body>
     <h1>feedbackLogger</h1>
     <div id="header">
-        <p id="text">Press and hold a seat - spoken text will go here</p>
+        <p id="text_final">Press and hold a seat - spoken text will go here</p>
+        <p id="text_interim"></p>
         <button id="download">Download</button>
     </div>
     <div id="main">
@@ -99,7 +100,8 @@ table td.active {
 
 <script type="module">
 
-const elementOutput = document.getElementById("text");
+const textFinal = document.getElementById("text_final");
+const textInterim = document.getElementById("text_interim");
 
 const data = { //JSON.parse(`{
     "001": {
@@ -141,29 +143,44 @@ class SpeechManager {
         r.continuous = true;
         r.interimResults = true;
         r.addEventListener("result", this.onResult.bind(this));
-        r.addEventListener("audiostart", ()=>text.textContent="speak ...");
-        r.addEventListener("audioend", ()=>text.textContent="_");
+        r.addEventListener("audiostart", ()=>textInterim.textContent="speak ...");
+        //r.addEventListener("audioend", ()=>elementOutput.textContent="_");
         this.r = r;
     }
     onResult(event) {
-        let text = "";
+        console.log(event);
+        let interim = "";
+        /*
         for (const res of event.results) {
             text += res[0].transcript;
             if (res.isFinal) {
                 this.dataDestination.push(text);
-                console.log(text);
+                console.log('final', text);
             }
         }
         elementOutput.textContent = text;
+        */
+
+        for (const res of event.results) {
+            if (res.isFinal) {
+                textFinal.textContent += res[0].transcript;
+            } else {
+                interim += res[0].transcript;
+            }
+        }
+        textInterim.textContent = interim;
+
     }
     start(dataDestination) {
         console.assert(dataDestination, "need dataDestination");
         this.dataDestination = dataDestination;
         this.r.start();
-        text.textContent = "starting ..."
+        textFinal.textContent = "";
+        textInterim.textContent = "starting ...";
     }
     stop() {
         this.r.stop();
+        this.dataDestination.push(textFinal.textContent);
         //this.dataDestination = undefined;
     }
 
@@ -240,7 +257,6 @@ for (let student of Object.values(data)) {
     td.addEventListener('touchend', stop);
     td.addEventListener('mouseup', stop);
     td.addEventListener('mouseleave', stop);
-    // TODO really should do something with 'audiostart' event
 }
 
 </script>
