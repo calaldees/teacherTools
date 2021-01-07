@@ -140,6 +140,7 @@ class SpeechManager {
         } else {
             r = new SpeechRecognition();
         }
+        r.lang = 'en-UK';
         r.continuous = true;
         r.interimResults = true;
         r.addEventListener("result", this.onResult.bind(this));
@@ -148,30 +149,20 @@ class SpeechManager {
         this.r = r;
     }
     onResult(event) {
-        console.log(event);
+        let final = "";
         let interim = "";
-        /*
-        for (const res of event.results) {
-            text += res[0].transcript;
-            if (res.isFinal) {
-                this.dataDestination.push(text);
-                console.log('final', text);
-            }
-        }
-        elementOutput.textContent = text;
-        */
-
         for (const res of event.results) {
             if (res.isFinal) {
-                textFinal.textContent += res[0].transcript;
+                final += res[0].transcript;
             } else {
                 interim += res[0].transcript;
             }
         }
         textInterim.textContent = interim;
-
+        textFinal.textContent = final;
     }
     start(dataDestination) {
+        this.recording = true;
         console.assert(dataDestination, "need dataDestination");
         this.dataDestination = dataDestination;
         this.r.start();
@@ -179,9 +170,11 @@ class SpeechManager {
         textInterim.textContent = "starting ...";
     }
     stop() {
-        this.r.stop();
-        this.dataDestination.push(textFinal.textContent);
-        //this.dataDestination = undefined;
+        if (this.recording) {
+            this.r.stop();
+            this.recording = false;
+            this.dataDestination.push(textFinal.textContent);
+        }
     }
 
 }
