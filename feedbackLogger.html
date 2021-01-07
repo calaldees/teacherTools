@@ -152,6 +152,7 @@ class SpeechManager {
         let final = "";
         let interim = "";
         for (const res of event.results) {
+            if (res[0].confidence < 0.1) {continue;}  //mobile get's lots of confidence events at 0 for some reason
             if (res.isFinal) {
                 final += res[0].transcript;
             } else {
