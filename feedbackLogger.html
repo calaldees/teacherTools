@@ -226,10 +226,12 @@ for (let student of Object.values(data)) {
 
     td.textContent = student.name;
     function start(e) {
+        e.preventDefault();
         e.target.classList.add("active");
         s.start(student.comments);
     }
     function stop(e) {
+        e.preventDefault();
         e.target.classList.remove("active");
         s.stop();
     }
