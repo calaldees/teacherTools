@@ -1,6 +1,11 @@
 <!DOCTYPE html><html>
 <head>
-    <!-- inspired by https://www.twilio.com/blog/speech-recognition-browser-web-speech-api -->
+<!-- 
+    References
+    https://www.twilio.com/blog/speech-recognition-browser-web-speech-api 
+    https://stackoverflow.com/questions/50953900/speech-to-text-web-api-returns-different-result-on-desktop-vs-mobile?rq=1
+    https://developers.google.com/web/updates/2013/01/Voice-Driven-Web-Apps-Introduction-to-the-Web-Speech-API
+-->
     <meta charset="utf-8" />
     <link id="favicon" rel="shortcut icon" type="image/png" href="data:image/png;base64,....==" />
     <title>feedbackLogger</title>
@@ -151,6 +156,7 @@ class SpeechManager {
     onResult(event) {
         let final = "";
         let interim = "";
+        // needs to be rewritten for mobile - why is mobile different?! POS See links at top
         for (const res of event.results) {
             if (res[0].confidence < 0.1) {continue;}  //mobile get's lots of confidence events at 0 for some reason
             if (res.isFinal) {
