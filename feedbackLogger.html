@@ -39,9 +39,14 @@ h1 {
     display: none;
 }
 
-#text {
+#text_final {
     padding-left: 0.5em;
 }
+#text_interim {
+    padding-left: 0.5em;
+}
+/*#text_final::before {content: "F:";}*/
+/*#text_interim::before {content: "I:";}*/
 
 #header {
     flex-grow: 0;
@@ -58,7 +63,7 @@ h1 {
 #main {
     flex-grow: 1;
     align-self: stretch;
-    position: relative; /* I cant belive I need to resort to this old relative/absolue hack! */
+    position: relative; /* I cant believe I need to resort to this old relative/absolue hack! */
 }
 
 table {
@@ -155,49 +160,53 @@ class SpeechManager {
         this.speechRecognition = speechRecognition;
     }
     onResult(event) {
-        console.log(event);
-        const result = event.results[event.resultIndex][0];
-        if (result.isFinal) {
-            textFinal.textContent += result.transcript
-            textInterim.textContent = "";
-        } else {
-            textInterim.textContent = result.transcript;
-        }
-        
-        /*
-        let final = "";
-        let interim = "";
-        // needs to be rewritten for mobile - why is mobile different?! POS See links at top
-        for (const res of event.results) {
-            if (res[0].confidence < 0.1) {continue;}  //mobile get's lots of confidence events at 0 for some reason
-            if (res.isFinal) {
-                final += res[0].transcript;
+        //console.log(event);
+        textFinal.textContent = "";
+        textInterim.textContent = "";
+        for (const result of event.results) {
+            if (result[0].confidence == 0) {continue;}  // speechRecognition on mobile Chrome spams all previous results as confidence=0 - ignore them
+            const transcript = result[0].transcript;
+            if (result.isFinal) {
+                textFinal.textContent += transcript;
             } else {
-                interim += res[0].transcript;
+                textInterim.textContent += transcript;
             }
         }
-        textInterim.textContent = interim;
-        textFinal.textContent = final;
-        */
     }
-    start(funcStoreSpeech) {
+    start(funcStoreSpeech, funcSetActive) {
         console.assert(typeof funcStoreSpeech === 'function', "need funcStoreSpeech");
+        console.assert(typeof funcSetActive === 'function', "need funcSetActive");
         this.funcStoreSpeech = funcStoreSpeech;
+        this.funcSetActive = funcSetActive;
 
         textFinal.textContent = "";
         textInterim.textContent = "starting ...";
 
+        this.recording = true;
+        this.funcSetActive(true);
         this.speechRecognition.start();
     }
     stop() {
+        this.recording = false;
+        this.funcSetActive(false);
         this.speechRecognition.stop();
     }
     _audiostart(event) {
+        console.log('audiostart');
         textInterim.textContent="speak ..."
     }
     _audioend(event) {
-        this.funcStoreSpeech(textFinal.textContent);
-        this.funcStoreSpeech = null;
+        console.log('audioend');
+        if (this.speechRecognition.continuous && this.recording) {
+            // speechRecognition.continuous on mobile chrome is broken shite
+            // https://stackoverflow.com/questions/42134899/webkitspeechrecognition-on-android-chrome
+            textFinal.textContent += textInterim.textContent;
+            textInterim.textContent = "";
+            this.speechRecognition.start();
+        }
+        if (!this.recording) {
+            this.funcStoreSpeech(textFinal.textContent);
+        }
     }
 
 }
@@ -253,19 +262,22 @@ const tbl = layoutTableContent(roomLayout);
 document.getElementById('main').appendChild(tbl);
 
 for (let student of Object.values(data)) {
-    //console.log(student.name);
     const td = document.getElementById(`seat_${student.seat}`);
     td.classList.add("occupied");
 
     td.textContent = student.name;
     function start(e) {
         e.preventDefault();
-        e.target.classList.add("active");
-        s.start(student.comments.push);
+        s.start(
+            student.comments.push, 
+            function (isActive) {
+                if (isActive) {e.target.classList.add("active");}
+                else {e.target.classList.remove("active");}
+            },
+        );
     }
     function stop(e) {
         e.preventDefault();
-        e.target.classList.remove("active");
         s.stop();
     }
     td.addEventListener('touchstart', start);
