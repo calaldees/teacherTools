@@ -14,6 +14,7 @@ html {
     height:100%;
     font-family: sans-serif;
     caret-color: transparent !important;
+    font-size: 2vh;
 }
 
 body {
@@ -136,24 +137,34 @@ const data = { //JSON.parse(`{
 class SpeechManager {
     constructor() {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
-        let r = {start: ()=> null, stop: ()=>null, addEventListener: ()=>null};
+        let speechRecognition = {start: ()=> null, stop: ()=>null, addEventListener: ()=>null};
         if (!SpeechRecognition) {
             const msg = "Your browser doesn't support Speech Recognition. Sorry.";
             elementOutput.textContent = msg;
             console.error(msg);
             //throw msg;
         } else {
-            r = new SpeechRecognition();
+            speechRecognition = new SpeechRecognition();
         }
-        r.lang = 'en-UK';
-        r.continuous = true;
-        r.interimResults = true;
-        r.addEventListener("result", this.onResult.bind(this));
-        r.addEventListener("audiostart", ()=>textInterim.textContent="speak ...");
-        //r.addEventListener("audioend", ()=>elementOutput.textContent="_");
-        this.r = r;
+        speechRecognition.lang = 'en-UK';
+        speechRecognition.continuous = true;
+        speechRecognition.interimResults = true;
+        speechRecognition.addEventListener("result", this.onResult.bind(this));
+        speechRecognition.addEventListener("audiostart", this._audiostart.bind(this));
+        speechRecognition.addEventListener("audioend", this._audioend.bind(this));
+        this.speechRecognition = speechRecognition;
     }
     onResult(event) {
+        console.log(event);
+        const result = event.results[event.resultIndex][0];
+        if (result.isFinal) {
+            textFinal.textContent += result.transcript
+            textInterim.textContent = "";
+        } else {
+            textInterim.textContent = result.transcript;
+        }
+        
+        /*
         let final = "";
         let interim = "";
         // needs to be rewritten for mobile - why is mobile different?! POS See links at top
@@ -167,21 +178,26 @@ class SpeechManager {
         }
         textInterim.textContent = interim;
         textFinal.textContent = final;
+        */
     }
-    start(dataDestination) {
-        this.recording = true;
-        console.assert(dataDestination, "need dataDestination");
-        this.dataDestination = dataDestination;
-        this.r.start();
+    start(funcStoreSpeech) {
+        console.assert(typeof funcStoreSpeech === 'function', "need funcStoreSpeech");
+        this.funcStoreSpeech = funcStoreSpeech;
+
         textFinal.textContent = "";
         textInterim.textContent = "starting ...";
+
+        this.speechRecognition.start();
     }
     stop() {
-        if (this.recording) {
-            this.r.stop();
-            this.recording = false;
-            this.dataDestination.push(textFinal.textContent);
-        }
+        this.speechRecognition.stop();
+    }
+    _audiostart(event) {
+        textInterim.textContent="speak ..."
+    }
+    _audioend(event) {
+        this.funcStoreSpeech(textFinal.textContent);
+        this.funcStoreSpeech = null;
     }
 
 }
@@ -245,7 +261,7 @@ for (let student of Object.values(data)) {
     function start(e) {
         e.preventDefault();
         e.target.classList.add("active");
-        s.start(student.comments);
+        s.start(student.comments.push);
     }
     function stop(e) {
         e.preventDefault();
