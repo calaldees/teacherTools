@@ -158,8 +158,6 @@ class SpeechManager {
         speechRecognition.addEventListener("audiostart", this._audiostart.bind(this));
         speechRecognition.addEventListener("audioend", this._audioend.bind(this));
         this.speechRecognition = speechRecognition;
-
-        this.text = "";
     }
     onResult(event) {
         console.log(event);
@@ -169,6 +167,7 @@ class SpeechManager {
         // speechRecognition on mobile Chrome has all previous results as confidence=0
         // provide a different means of capture
         const manualContinuous = (event.results[0][0].confidence == 0) && event.results[0][0].isFinal;
+        console.log("manualContinuous", manualContinuous);
         if (manualContinuous) {
             // Mobile (continuous capture not supported)
             textFinal.textContent = this.text;
@@ -193,6 +192,7 @@ class SpeechManager {
         this.funcStoreSpeech = funcStoreSpeech;
         this.funcSetActive = funcSetActive;
 
+        this.text = "";
         textFinal.textContent = "";
         textInterim.textContent = "starting ...";
 
