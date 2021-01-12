@@ -162,7 +162,7 @@ class SpeechManager {
         this.text = "";
     }
     onResult(event) {
-        //console.log(event);
+        console.log(event);
         textFinal.textContent = "";
         textInterim.textContent = "";
 
@@ -206,16 +206,17 @@ class SpeechManager {
         if (this.funcSetActive) {this.funcSetActive(false);}
     }
     _audiostart(event) {
-        console.log('audiostart');
+        console.log("audiostart");
         textInterim.textContent="speak ...";
     }
     _audioend(event) {
-        console.log('audioend');
+        console.log("audioend");
         if (this.speechRecognition.continuous && this.recording) {
             // speechRecognition.continuous on mobile chrome is broken - auto record again
             // https://stackoverflow.com/questions/42134899/webkitspeechrecognition-on-android-chrome
+            console.log("audioend", this.text, textFinal.textContent, textInterim.textContent);
             this.text += textInterim.textContent;
-            textFinal = this.text;
+            textFinal.textContent = this.text;
             textInterim.textContent = "";
             this.speechRecognition.start();
         }
