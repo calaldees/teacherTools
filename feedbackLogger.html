@@ -166,7 +166,7 @@ class SpeechManager {
 
         // speechRecognition on mobile Chrome has all previous results as confidence=0
         // provide a different means of capture
-        const manualContinuous = (event.results[0][0].confidence == 0) && event.results[0][0].isFinal;
+        const manualContinuous = (event.results[0][0].confidence == 0) && event.results[0].isFinal;
         console.log("manualContinuous", manualContinuous);
         if (manualContinuous) {
             // Mobile (continuous capture not supported)
