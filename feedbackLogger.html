@@ -158,18 +158,32 @@ class SpeechManager {
         speechRecognition.addEventListener("audiostart", this._audiostart.bind(this));
         speechRecognition.addEventListener("audioend", this._audioend.bind(this));
         this.speechRecognition = speechRecognition;
+
+        this.text = "";
     }
     onResult(event) {
         //console.log(event);
         textFinal.textContent = "";
         textInterim.textContent = "";
-        for (const result of event.results) {
-            if (result[0].confidence == 0) {continue;}  // speechRecognition on mobile Chrome spams all previous results as confidence=0 - ignore them
-            const transcript = result[0].transcript;
-            if (result.isFinal) {
-                textFinal.textContent += transcript;
-            } else {
-                textInterim.textContent += transcript;
+
+        // speechRecognition on mobile Chrome has all previous results as confidence=0
+        // provide a different means of capture
+        const manualContinuous = (event.results[0][0].confidence == 0) && event.results[0][0].isFinal;
+        if (manualContinuous) {
+            // Mobile (continuous capture not supported)
+            textFinal.textContent = this.text;
+            textInterim.textContent = event.results[event.resultIndex][0].transcript;
+        }
+        else {
+            // Desktop (continuous capture supported correctly)
+            for (const result of event.results) {
+                //if (result[0].confidence == 0) {continue;}
+                const transcript = result[0].transcript;
+                if (result.isFinal) {
+                    textFinal.textContent += transcript;
+                } else {
+                    textInterim.textContent += transcript;
+                }
             }
         }
     }
@@ -188,24 +202,27 @@ class SpeechManager {
     }
     stop() {
         this.recording = false;
-        this.funcSetActive(false);
         this.speechRecognition.stop();
+        if (this.funcSetActive) {this.funcSetActive(false);}
     }
     _audiostart(event) {
         console.log('audiostart');
-        textInterim.textContent="speak ..."
+        textInterim.textContent="speak ...";
     }
     _audioend(event) {
         console.log('audioend');
         if (this.speechRecognition.continuous && this.recording) {
-            // speechRecognition.continuous on mobile chrome is broken shite
+            // speechRecognition.continuous on mobile chrome is broken - auto record again
             // https://stackoverflow.com/questions/42134899/webkitspeechrecognition-on-android-chrome
-            textFinal.textContent += textInterim.textContent;
+            this.text += textInterim.textContent;
+            textFinal = this.text;
             textInterim.textContent = "";
             this.speechRecognition.start();
         }
         if (!this.recording) {
-            this.funcStoreSpeech(textFinal.textContent);
+            const text = textFinal.textContent + textInterim.textContent;
+            console.log("store", text);
+            this.funcStoreSpeech(text);
         }
     }
 
