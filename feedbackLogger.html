@@ -214,10 +214,12 @@ class SpeechManager {
         if (this.speechRecognition.continuous && this.recording) {
             // speechRecognition.continuous on mobile chrome is broken - auto record again
             // https://stackoverflow.com/questions/42134899/webkitspeechrecognition-on-android-chrome
+            console.debug("speech on mobile is a big odd - attempt to restart");
             console.log("audioend", this.text, textFinal.textContent, textInterim.textContent);
             this.text += textInterim.textContent;
             textFinal.textContent = this.text;
             textInterim.textContent = "";
+            this.speechRecognition.abort();
             this.speechRecognition.start();
         }
         if (!this.recording) {
