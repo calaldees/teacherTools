@@ -5,6 +5,7 @@
     https://www.twilio.com/blog/speech-recognition-browser-web-speech-api 
     https://stackoverflow.com/questions/50953900/speech-to-text-web-api-returns-different-result-on-desktop-vs-mobile?rq=1
     https://developers.google.com/web/updates/2013/01/Voice-Driven-Web-Apps-Introduction-to-the-Web-Speech-API
+    https://stackoverflow.com/questions/44226827/how-to-know-if-webkitspeechrecognition-is-started
 -->
     <meta charset="utf-8" />
     <link id="favicon" rel="shortcut icon" type="image/png" href="data:image/png;base64,....==" />
@@ -156,7 +157,9 @@ class SpeechManager {
         speechRecognition.interimResults = true;
         speechRecognition.addEventListener("result", this.onResult.bind(this));
         speechRecognition.addEventListener("audiostart", this._audiostart.bind(this));
-        speechRecognition.addEventListener("audioend", this._audioend.bind(this));
+        //speechRecognition.addEventListener("audioend", this._audioend.bind(this));
+        speechRecognition.addEventListener("end", this._audioend.bind(this));
+        speechRecognition.addEventListener("error", this._audioend.bind(this));
         this.speechRecognition = speechRecognition;
     }
     onResult(event) {
