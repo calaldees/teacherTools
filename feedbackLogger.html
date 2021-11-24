@@ -146,7 +146,7 @@ class SpeechManager {
         let speechRecognition = {start: ()=> null, stop: ()=>null, addEventListener: ()=>null};
         if (!SpeechRecognition) {
             const msg = "Your browser doesn't support Speech Recognition. Sorry.";
-            elementOutput.textContent = msg;
+            document.getElementById("text_final").textContent = msg;
             console.error(msg);
             //throw msg;
         } else {
