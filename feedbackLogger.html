@@ -292,7 +292,7 @@ for (let student of Object.values(data)) {
     function start(e) {
         e.preventDefault();
         s.start(
-            student.comments.push, 
+            (text) => {student.comments.push(text)},
             function (isActive) {
                 if (isActive) {e.target.classList.add("active");}
                 else {e.target.classList.remove("active");}
